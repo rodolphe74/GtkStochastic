@@ -1,0 +1,7 @@
+data/rodoco.prg.GtkStochastic.desktop.in
+data/rodoco.prg.GtkStochastic.appdata.xml.in
+data/rodoco.prg.GtkStochastic.gschema.xml
+src/window.ui
+src/main.vala
+src/window.vala
+

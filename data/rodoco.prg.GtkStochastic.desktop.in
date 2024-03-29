@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=gtkstochastic
+Exec=gtkstochastic
+Icon=rodoco.prg.GtkStochastic
+Terminal=false
+Type=Application
+Categories=GTK;
+StartupNotify=true

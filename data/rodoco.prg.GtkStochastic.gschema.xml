@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="gtkstochastic">
+	<schema id="rodoco.prg.GtkStochastic" path="/rodoco/prg/GtkStochastic/">
+	</schema>
+</schemalist>
