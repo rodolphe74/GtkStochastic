@@ -1,74 +1,71 @@
 #include <math.h>
 #include <iostream>
+#include <string>
 #include "stochasticLib.h"
 #include "cairoUtils.hpp"
+#include "ImageUtils.hpp"
 
- #define STB_IMAGE_IMPLEMENTATION
- #include <stb/stb_image.h>
- #define STB_IMAGE_WRITE_IMPLEMENTATION
- #include <stb/stb_image_write.h>
+// A4 600 dpi
+#define DRAW_WIDTH 4956
+#define DRAW_HEIGHT 7014
 
-int echo_number(int value)
-{
-    return value;
-}
+// bypass strange border triangles
+#define MARGIN 20
 
-char *load_image(unsigned char *filename, int *outWidth, int *outHeight, int *outComp, int *arrayLength)
-{
-    std::cout << filename << std::endl;
 
-    int width, height, channels;
-    char *img =  (char *) stbi_load((const char *) filename, &width, &height, &channels, 0);
-
-    printf("Image is at %p\n", (void *) img);
-
-    if(img == NULL) {
-        std::cout << "Error loading the image" << std::endl;
-        return nullptr;
-    }
-    std::cout << "Image:" << width << "*" << height << "*"  << channels << std::endl;
-    // *arrayLength = width * height * channels;
-    *outWidth = width;
-    *outHeight = height;
-    *outComp = channels;
-
-    for (int i = 0; i < 20; i++) {
-        std::cout << (int) img[i] << ",";
-    }
-    std::cout << std::endl;
-    return img;
-}
 
 void imageSize(unsigned char *filename, int *w, int *h, int *c)
 {
-    int width, height, channels;
-    char *img =  (char *) stbi_load((const char *) filename, &width, &height, &channels, 0);
-    *w = width;
-    *h = height;
-    *c = channels;
-    printf("Name:%s  Size:%d\n", filename,  width * height * channels);
+    Image im;
+    std::string imageFilename = std::string((char *)filename);
+    ImageUtils::loadImageAsRGBA(imageFilename.c_str(), &im);
+
+    Image rszgr;
+    int nw = DRAW_WIDTH - 2 * MARGIN;
+    int nh = DRAW_HEIGHT - 2 * MARGIN;
+	ImageUtils::resizeImage(&im, &rszgr, nw, nh);
+	*w = rszgr.w;
+	*h = rszgr.h;
+	*c = rszgr.comp;
+
+    printf("Name:%s  Size:%d (%d*%d*%d)\n", filename,  rszgr.w * rszgr.h * rszgr.comp, rszgr.w, rszgr.h, rszgr.comp);
 }
 
 void loadImage(unsigned char *filename, char *data)
 {
-    int width, height, channels;
-    char *img =  (char *) stbi_load((const char *) filename, &width, &height, &channels, 0);
-    printf("Image is at %p\n", (void *) data);
+    Image im, gr, rszgr;
+    std::string imageFilename = std::string((char *)filename);
+	ImageUtils::loadImageAsRGBA(imageFilename.c_str(), &im);
+	ImageUtils::convertImageToGray(&im, &gr, 1.6, 255);
+	ImageUtils::saveImageAsPNG("gray.png", &gr);
 
-    if(data == NULL) {
+    int nw = DRAW_WIDTH - 2 * MARGIN;
+    int nh = DRAW_HEIGHT - 2 * MARGIN;
+	ImageUtils::resizeImage(&gr, &rszgr, nw, nh);
+
+	ImageUtils::saveImageAsPNG("sized.png", &rszgr);
+
+    printf("Image is at %p  comp=%d\n", (void *) rszgr.data, rszgr.comp);
+
+    int i = 0;
+    if(gr.data == NULL) {
         std::cout << "Error loading the image" << std::endl;
     } else {
-        for (int i = 0; i < height * width * channels; i++) {
-            data[i] = img[i];
+        for (i = 0; i < rszgr.w * rszgr.h * rszgr.comp; i++) {
+            data[i] = rszgr.data[i];
         }
     }
+    std::cout << "i=" << i << std::endl;
+
 
     for (int i = 0; i < 20; i++) {
         std::cout << (int) data[i] << ",";
     }
     std::cout << std::endl;
 
-    stbi_image_free(img);
+    ImageUtils::freeImage(&im);
+    ImageUtils::freeImage(&gr);
+    ImageUtils::freeImage(&rszgr);
 }
 
 
@@ -95,12 +92,8 @@ cairo_t *echo_cairo_t(cairo_t *cr)
 
 cairo_t *do_sth_with_image_cairo_t(cairo_t *cr, char *data, int sz, int w, int h, int c)
 {
-    printf("w=%d h=%d c=%d\n", w, h, c);
-
     int stride = cairo_format_stride_for_width (CAIRO_FORMAT_RGB24, w);
-    printf("stride:%d\n", stride);
     unsigned char *formattedData = new unsigned char[stride * h];
-
 
     int count = 0;
     for (int i = 0; i < 4 * w * h; i+=4) {
@@ -115,7 +108,7 @@ cairo_t *do_sth_with_image_cairo_t(cairo_t *cr, char *data, int sz, int w, int h
     cairo_surface_t *imgSurface = cairo_image_surface_create_for_data(formattedData, CAIRO_FORMAT_RGB24, w, h, stride);
     cairo_set_source_surface(cr, imgSurface, 0, 0);
     cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-    cairo_rectangle(cr, 0, 0, 640, 918);
+    cairo_rectangle(cr, 0, 0, w, h);
     cairo_fill(cr);
 	cairo_surface_finish(imgSurface);
 

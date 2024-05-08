@@ -31,11 +31,11 @@ executable(	'stochastic', ['sd.cpp', 'cairoUtils.cpp', 'ImageUtils.cpp', 'raster
 
 # Create shared lib
 stochasticlib_sources = [
-  'stochasticLib.cpp',
+  'stochasticLib.cpp', 'ImageUtils.cpp', 'raster.cpp', 'mathc/mathc.cpp'
 ]
 
 stochasticlib_headers = [
-  'stochasticLib.h',
+  'stochasticLib.h'
 ]
 
 stochasticlib_deps = [
